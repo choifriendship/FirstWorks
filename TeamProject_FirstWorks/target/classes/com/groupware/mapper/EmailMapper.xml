@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"HTTP://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.groupware.mapper.EmailMapper">
+
+<resultMap type="com.groupware.dto.EmailDTO" id="Email">
+
+<id property="mailnum" column="mailnum"/>
+<id property="memnum" column="memnum"/>
+<id property="sendermail" column="sendermail"/>
+<id property="receivemail" column="receivemail"/>
+<id property="title" column="title"/>
+<id property="content" column="content"/>
+<id property="registerDate" column="registerDate"/>
+<id property="readck" column="readck"/>
+<id property="delck" column="delck"/>
+
+</resultMap>
+<resultMap type="com.groupware.dto.MemberDTO" id="Member">
+
+<id property="mem_no" column="mem_no"/>
+<id property="dept_no" column="dept_no"/>
+<id property="mem_id" column="mem_id"/>
+<id property="mem_pw" column="mem_pw"/>
+<id property="mem_nm" column="mem_nm"/>
+<id property="mem_eml" column="mem_eml"/>
+<id property="mem_ent" column="mem_ent"/>
+<id property="mem_tel" column="mem_tel"/>
+<id property="mem_stamp" column="mem_stamp"/>
+<id property="rank_no" column="rank_no"/>
+<collection property="com.groupware.dto.EmailDTO" resultMap="com.groupware.dto.EmailDTO"/>
+
+</resultMap>
+
+
+<select id="getList" resultType="com.groupware.dto.EmailDTO">
+<![CDATA[ select * from Email order by registerDate ]]>
+</select>
+
+<!-- 메일 전송 -->
+<insert id="insert"> insert into Email (mailnum,memnum,sendermail,receivemail,title,content,registerDate,readck,delck) 
+values (eml.nextval,#{memnum},#{sendermail},#{receivemail},#{title},#{content},sysdate,0,0) 
+</insert>
+
+<!-- 받은 메일함 -->
+<select id="receiveList" resultType="com.groupware.dto.EmailDTO">
+select *
+from Email
+where receivemail =#{receivemail} and delck=0
+order by mailnum desc
+OFFSET #{offset} ROWS FETCH NEXT #{pagesize} ROWS ONLY
+
+</select>
+
+<!-- 받은 메일함 게시글총수 -->
+<select id="receiveListcount" resultType="int">
+select count(*)
+from Email
+where receivemail =#{receivemail} and delck=0
+</select>
+
+<!-- 보낸메일함 -->
+<select id="sendList" resultType="com.groupware.dto.EmailDTO">
+
+select *
+from Email
+where sendermail =#{sendermail}
+
+</select>
+
+<!-- 받은 메일함 게시글총수 -->
+<select id="sendListcount" resultType="int">
+select count(*)
+from Email
+where sendermail =#{sendermail} and delck=0
+</select>
+
+
+<!-- 상세 페이지 -->
+<select id="detail" resultType="com.groupware.dto.EmailDTO">
+
+select *
+from Email
+where mailnum =#{mailnum}
+
+</select>
+
+<!-- 답장 -->
+
+<insert id="reply">
+insert into Email (mailnum,memnum,sendermail,receivemail,title,content,registerDate,readck,delck) 
+values (eml.nextval,#{memnum},#{sendermail},#{receivemail},#{title},#{content},sysdate,0,0) 
+</insert>
+
+<!-- 수신확인 시 업데이트 -->
+<update id="readupdate" >
+update Email
+set readck =1 
+where mailnum=#{mailnum}
+</update>
+
+<!-- 안 읽은 메일 함 -->
+<select id="unreadlist" resultType="com.groupware.dto.EmailDTO" >
+
+select *
+from Email
+where readck=0 and receivemail =#{receivemail}
+order by registerDate
+
+</select>
+
+
+<!-- 안 읽은 메일 수 -->
+<select id="count" resultType="int">
+select count(*)
+from Email
+where readck=0 and receivemail =#{receivemail}
+
+</select>
+
+<!--나에게서 메일 삭제 (업데이트)-->
+<update id="delupdate" >
+update Email
+set delck =1 
+where mailnum=#{mailnum}
+</update>
+
+<!-- 삭제 함 -->
+<select id="deleteview" resultType="com.groupware.dto.EmailDTO" >
+select *
+from Email
+where delck=1 and receivemail =#{receivemail}
+
+</select>
+<!-- 메일 전송 취소 (삭제)-->
+<delete id="revoke" parameterType="int">
+delete from Email where mailnum=#{mailnum} and readck=0
+</delete>
+
+<!--메일 복구 (업데이트)-->
+<update id="restore" >
+update Email
+set delck =0 
+where mailnum=#{mailnum}
+</update>
+
+</mapper>

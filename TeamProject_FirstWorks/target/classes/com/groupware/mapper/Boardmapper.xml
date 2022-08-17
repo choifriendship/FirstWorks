@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"HTTP://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.groupware.mapper.Boardmapper">
+	<insert id="vc_insert">
+		<selectKey keyProperty="apv_no" order="BEFORE" resultType="int">
+			select inc_seq.nextval from dual
+		</selectKey>
+		insert into apv_tb values (#{apv_no},#{mem_no},2,3,0)
+	</insert>
+	
+	<insert id="vc_inserttwo">
+		<selectKey keyProperty="apv_no" order="BEFORE" resultType="int">
+			select inc_seq.nextval from dual
+		</selectKey>
+		insert into apv_tb values (#{apv_no},0,#{mem_no},3,0)
+	</insert>
+	
+		<insert id="vc_insertthree">
+		<selectKey keyProperty="apv_no" order="BEFORE" resultType="int">
+			select inc_seq.nextval from dual
+		</selectKey>
+		insert into apv_tb values (#{apv_no},0,0,#{mem_no},1)
+	</insert> 
+	
+	<!-- 오라클 : '%'||#{word}||'%' -->
+	<!-- 검색조건처리를 위한 서치태그 구현 -->
+	<sql id="search">
+		<if test="word !=null and word !=''.toString()">
+			<if test="key=='t'.toString()">
+				and apv_vc_tb.apv_vc_tit like CONCAT('%',#{word},'%')
+			</if>
+			<if test="key=='c'.toString()">
+				and apv_vc_tb.apv_vc_txt like CONCAT('%',#{word},'%')
+			</if>
+			<if test="key=='tc'.toString()">
+				and (apv_vc_tb.apv_vc_tit like CONCAT('%',#{word},'%')
+				or apv_vc_tb.apv_vc_txt like CONCAT('%',#{word},'%'))
+			</if>
+		</if>
+	</sql>
+	<sql id="searchrej">
+		<if test="word !=null and word !=''.toString()">
+			<if test="key=='t'.toString()">
+				and apv_rjt_tb.apv_vc_tit like CONCAT('%',#{word},'%')
+			</if>
+			<if test="key=='c'.toString()">
+				and apv_rjt_tb.apv_vc_txt like CONCAT('%',#{word},'%')
+			</if>
+			<if test="key=='tc'.toString()">
+				and (apv_rjt_tb.apv_vc_tit like CONCAT('%',#{word},'%')
+				or apv_rjt_tb.apv_vc_txt like CONCAT('%',#{word},'%'))
+			</if>
+		</if>
+	</sql>
+	
+	<!-- 오라클 -->
+	
+	<sql id="searchora">
+		<if test="word !=null and word !=''.toString()">
+			<if test="key=='t'.toString()">
+				and apv_vc_tb.apv_vc_tit like '%'||#{word}||'%'
+			</if>
+			<if test="key=='c'.toString()">
+				and apv_vc_tb.apv_vc_txt like '%'||#{word}||'%'
+			</if>
+			<if test="key=='tc'.toString()">
+				and (apv_vc_tb.apv_vc_tit like '%'||#{word}||'%'
+				or apv_vc_tb.apv_vc_txt like '%'||#{word}||'%')
+			</if>
+		</if>
+	</sql>
+	<sql id="searchrejora">
+		<if test="word !=null and word !=''.toString()">
+			<if test="key=='t'.toString()">
+				and apv_rjt_tb.apv_vc_tit like '%'||#{word}||'%'
+			</if>
+			<if test="key=='c'.toString()">
+				and apv_rjt_tb.apv_vc_txt like '%'||#{word}||'%'
+			</if>
+			<if test="key=='tc'.toString()">
+				and (apv_rjt_tb.apv_vc_tit like '%'||#{word}||'%'
+				or apv_rjt_tb.apv_vc_txt like '%'||#{word}||'%')
+			</if>
+		</if>
+	</sql>
+	
+	<!-- 오라클 -->
+	<!-- (오라클버전limit) OFFSET #{offset} ROWS FETCH NEXT #{pagesize} ROWS ONLY -->
+	<!-- mysql 페이징 limit #{offset},#{pagesize} -->
+	<select id="waitinglist" resultType="Apv_vc_dto">
+		select * 
+		from apv_vc_tb,apv_wait_tb 
+		where apv_vc_tb.apv_no=apv_wait_tb.apv_no and apv_wait_tb.apv_line_one=#{mem_no}
+		 <include refid="searchora"/>
+		order by apv_vc_tb.apv_no desc 
+		<!-- limit #{offset},#{pagesize} -->
+		OFFSET #{offset} ROWS FETCH NEXT #{pagesize} ROWS ONLY
+	</select>
+	
+	<select id="waitinglist1" resultType="Apv_vc_dto">
+		select * 
+		from apv_vc_tb,apv_wait_tb 
+		where apv_vc_tb.apv_no=apv_wait_tb.apv_no and apv_wait_tb.apv_line_two=#{mem_no} and apv_wait_tb.apv_mid_cf=0 
+		 <include refid="searchora"/>
+		order by apv_vc_tb.apv_no desc 
+		<!-- limit #{offset},#{pagesize} --> 
+		OFFSET #{offset} ROWS FETCH NEXT #{pagesize} ROWS ONLY 
+	</select>
+	
+	<select id="waitinglist2" resultType="Apv_vc_dto">
+		select * 
+		from apv_vc_tb,apv_wait_tb 
+		where apv_vc_tb.apv_no=apv_wait_tb.apv_no and apv_wait_tb.apv_line_three=#{mem_no}
+		 <include refid="searchora"/>
+		order by apv_vc_tb.apv_no desc 
+		<!-- limit #{offset},#{pagesize} -->
+		OFFSET #{offset} ROWS FETCH NEXT #{pagesize} ROWS ONLY 
+	</select>
+	
+	<select id="watingcount" resultType="int">
+		select count(apv_wait_tb.apv_no) 
+		from apv_vc_tb,apv_wait_tb 
+		where apv_vc_tb.apv_no=apv_wait_tb.apv_no and apv_wait_tb.apv_str_cf=#{mem_no}
+		<include refid="searchora"/>
+	</select>
+	
+	<select id="watingcount1" resultType="int">
+		select count(apv_wait_tb.apv_no) 
+		from apv_vc_tb,apv_wait_tb 
+		where apv_vc_tb.apv_no=apv_wait_tb.apv_no and apv_wait_tb.apv_mid_cf=0 and apv_wait_tb.apv_line_two=#{mem_no}
+		<include refid="searchora"/>
+	</select>
+	
+	<select id="watingcount2" resultType="int">
+		select count(apv_wait_tb.apv_no) 
+		from apv_vc_tb,apv_wait_tb 
+		where apv_vc_tb.apv_no=apv_wait_tb.apv_no and apv_wait_tb.apv_fnl_cf=0 and apv_wait_tb.apv_mid_cf!=0 and apv_wait_tb.apv_line_three=#{mem_no}
+		<include refid="searchora"/>
+	</select>
+	
+	<select id="cflist" resultType="Apv_vc_dto">
+		select * 
+		from apv_tb,apv_vc_tb 
+		where apv_tb.apv_no=apv_vc_tb.apv_no and apv_tb.apv_cf_no=1 and 
+		(apv_tb.apv_mem_no1=#{mem_no} or apv_tb.apv_mem_no2=#{mem_no} or apv_tb.apv_mem_no3=#{mem_no})
+		 <include refid="searchora"/>
+		order by apv_vc_tb.apv_no desc 
+		<!-- limit #{offset},#{pagesize} -->
+		OFFSET #{offset} ROWS FETCH NEXT #{pagesize} ROWS ONLY
+	</select>
+	
+	<select id="cflistall" resultType="Apv_vc_dto">
+		select * 
+		from apv_tb,apv_vc_tb 
+		where apv_tb.apv_no=apv_vc_tb.apv_no and apv_tb.apv_cf_no=1 
+		<include refid="searchora"/>
+		order by apv_vc_tb.apv_no desc		 
+		<!-- limit #{offset},#{pagesize} --> 
+		OFFSET #{offset} ROWS FETCH NEXT #{pagesize} ROWS ONLY
+	</select>
+	
+	<select id="cflistcount" resultType="int">
+		select count(*) 
+		from apv_tb,apv_vc_tb 
+		where apv_tb.apv_no=apv_vc_tb.apv_no and apv_tb.apv_cf_no=1 and 
+		(apv_tb.apv_mem_no1=#{mem_no} or apv_tb.apv_mem_no2=#{mem_no} or apv_tb.apv_mem_no3=#{mem_no})
+		<include refid="searchora"/>
+	</select>
+	
+	<select id="cflistallcount" resultType="int">
+		select count(*) 
+		from apv_tb,apv_vc_tb
+		where apv_tb.apv_no=apv_vc_tb.apv_no and apv_tb.apv_cf_no=1
+		<include refid="searchora"/>
+	</select>
+	
+	<select id="rejlist" resultType="Apv_vc_dto">
+		select * 
+		from apv_tb,apv_rjt_tb 
+		where apv_tb.apv_no=apv_rjt_tb.apv_no and 
+		(apv_tb.apv_mem_no1=#{mem_no} or apv_tb.apv_mem_no2=#{mem_no} or apv_tb.apv_mem_no3=#{mem_no})
+		 <include refid="searchrejora"/>
+		order by apv_rjt_tb.apv_no desc 
+		<!-- limit #{offset},#{pagesize}  -->
+		OFFSET #{offset} ROWS FETCH NEXT #{pagesize} ROWS ONLY
+	</select>
+	
+	<select id="rejlistcount" resultType="int">
+		select count(*) 
+		from apv_tb,apv_rjt_tb 
+		where apv_tb.apv_no=apv_rjt_tb.apv_no and 
+		(apv_tb.apv_mem_no1=#{mem_no} or apv_tb.apv_mem_no2=#{mem_no} or apv_tb.apv_mem_no3=#{mem_no})
+		<include refid="searchrejora"/>
+	</select>
+	
+	<select id="watingmyapv" resultType="Apv_vc_dto">
+		select * 
+		from apv_vc_tb,apv_wait_tb 
+		where apv_vc_tb.apv_no=apv_wait_tb.apv_no and apv_wait_tb.apv_str_cf=0 
+		and apv_wait_tb.apv_mid_cf=#{mem_no} 
+		<include refid="search"/>
+		order by apv_wait_tb.apv_no desc 
+		<!-- limit #{offset},#{pagesize}	 -->	 
+		OFFSET #{offset} ROWS FETCH NEXT #{pagesize} ROWS ONLY
+	</select>
+	
+	<select id="mywating" resultType="int">
+		select count(*) 
+		from apv_vc_tb,apv_wait_tb 
+		where apv_vc_tb.apv_no=apv_wait_tb.apv_no and apv_wait_tb.apv_str_cf=0 and apv_wait_tb.apv_mid_cf=#{mem_no}
+		<include refid="search"/>
+	</select>
+
+</mapper> 
